@@ -16,7 +16,7 @@ Key Features:
 - **Clipboard Copy**: Copy soil property data for selected points directly to the clipboard.
 - **Load Shapefiles**: Automatically load the generated shapefiles into the QGIS project.
 
-.. figure:: /images/welcome_page.png 
+.. figure:: /images_read_the_docs/welcome_page.png 
    :alt: Welcome page
    :scale: 100%
    :align: center
