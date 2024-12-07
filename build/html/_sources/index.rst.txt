@@ -6,6 +6,8 @@
 Welcome to Soil_grids_downloader's documentation!
 =================================================
 
+This is documentation of the Soil Grids Doownloader QGIS Plug In
+
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
