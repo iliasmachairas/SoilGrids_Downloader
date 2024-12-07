@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/plugins/Soil_Grids_Downloader" >
+        <file>icon.png</file>
+    </qresource>
+</RCC>
