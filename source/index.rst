@@ -6,7 +6,13 @@
 Welcome to Soil_grids_downloader's documentation!
 =================================================
 
-The **Soil Grids Downloader** is a QGIS plugin designed to streamline the process of downloading and visualizing soil properties data. Users can extract soil attributes such as clay, sand, silt, soil organic carbon (SOC), and nitrogen content, for specific points or shapefile datasets. The plugin supports multiple functionalities including coordinate selection, property filtering, shapefile generation, and integration with external services.
+The **Soil Grids Downloader** is a QGIS plugin designed to streamline the process of downloading and visualizing soil properties data derived from `https://soilgrids.org <https://soilgrids.org/>`
+Users can extract soil attributes such as clay, sand, silt, soil organic carbon (SOC), and nitrogen content, for specific points or shapefile datasets.
+The plugin supports multiple functionalities including coordinate selection, property filtering, and shapefile generation.
+
+.. image:: images_read_the_docs/welcome_page.PNG 
+   :alt: Welcome page
+   :align: center
 
 Key Features:
 --------------
@@ -16,9 +22,6 @@ Key Features:
 - **Clipboard Copy**: Copy soil property data for selected points directly to the clipboard.
 - **Load Shapefiles**: Automatically load the generated shapefiles into the QGIS project.
 
-.. image:: images_read_the_docs/welcome_page.PNG 
-   :alt: Welcome page
-   :align: center
 
 .. toctree::
    :maxdepth: 2
@@ -33,7 +36,9 @@ Key Features:
 
 Installation
 ============
-For installation instructions, refer to the :doc:`installation` page.
+
+Regarding installation instructions you just need to download then install the plugin from QGIS repository for free. 
+There is no need to install anything more than that
 
 Usage
 =====
@@ -46,9 +51,13 @@ The plugin provides several functionalities to streamline soil data analysis:
 1. **Open Directory**: Access the plugin's working directory for shapefile management.
 2. **Shapefile Selection**: Choose an existing shapefile to append soil data.
 3. **Soil Properties Selection**: Specify which properties (e.g., clay, sand) to include.
+select where teh new shapefile will be saved 
+select if teh new output file will be saved 
+
+
 4. **Map Interaction**: Select a point on the map to fetch its soil attributes.
 5. **Copy to Clipboard**: Quickly copy selected data to the clipboard.
-6. **Load Updated Shapefiles**: Automatically load processed shapefiles into the QGIS interface.
+
 
 Indices and tables
 ==================
