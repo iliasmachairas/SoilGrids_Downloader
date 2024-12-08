@@ -6,9 +6,11 @@
 Welcome to Soil_grids_downloader's documentation!
 =================================================
 
-The **Soil Grids Downloader** is a QGIS plugin designed to streamline the process of downloading and visualizing soil properties data derived from `https://soilgrids.org <https://soilgrids.org/>`
+The **Soil Grids Downloader** is a QGIS plugin designed to streamline the process of downloading and visualizing soil properties data derived from `soil grids website`_
 Users can extract soil attributes such as clay, sand, silt, soil organic carbon (SOC), and nitrogen content, for specific points or shapefile datasets.
 The plugin supports multiple functionalities including coordinate selection, property filtering, and shapefile generation.
+
+.. _soil grids website: https://soilgrids.org
 
 .. image:: images_read_the_docs/welcome_page.PNG 
    :alt: Welcome page
