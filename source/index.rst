@@ -21,12 +21,9 @@ These properties are applicable to a specific depth range of 5 to 15 centimeters
 
 Key Features:
 --------------
-- **Download Soil Properties**: Fetch soil data from Soil Grids API based on selected locations.
-- **Point Selection**: Pick a specific point on the map to retrieve soil properties.
-- **Shapefile Integration**: Add soil property fields to point shapefiles and save the updated shapefiles.
-- **Clipboard Copy**: Copy soil property data for selected points directly to the clipboard.
-- **Load Shapefiles**: Automatically load the generated shapefiles into the QGIS project.
-
+- **Soil properties for shapefile of points**
+- **Accessing Test Data**
+- **On the fly - soil properties**
 
 .. toctree::
    :maxdepth: 2
