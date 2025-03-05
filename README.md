@@ -1,1 +1,1 @@
-# SoilGrids_Downloader_QGIS_PlunIn
+# SoilGrids_Downloader_QGIS_PlugIn
