@@ -1,32 +1,115 @@
-Plugin Builder Results
+🌱 Soil Grids Downloader
 
-Your plugin Soil_Grids_Downloader was created in:
-    C:/Users/Ilias/AppData/Roaming/QGIS/QGIS3/profiles/default/python/plugins\soil_grids_downloader
+Version: 0.1 (Initial Release) Compatible with QGIS 3.x and above
 
-Your QGIS plugin directory is located at:
-    C:/Users/Ilias/AppData/Roaming/QGIS/QGIS3/profiles/default/python/plugins
+The Soil Grids Downloader is a QGIS plugin designed to simplify the
+process of downloading and visualizing soil properties derived from
+SoilGrids.org.
+It enables users to extract soil attributes such as clay, sand, silt,
+soil organic carbon (SOC), and nitrogen content for specific points or
+shapefile datasets — all within QGIS.
 
-What's Next:
+[Soil Grids Introduction]
 
-  * Copy the entire directory containing your new plugin to the QGIS plugin
-    directory
+🌍 Key Features
 
-  * Compile the resources file using pyrcc5
+🧩 Soil Properties for Shapefile of Points
 
-  * Run the tests (``make test``)
+-   Select an existing shapefile with point geometry (projection
+    EPSG:4326 – WGS 84).
+-   Retrieve and attach soil properties (clay, sand, silt, SOC,
+    nitrogen) to each point.
+-   The output shapefile includes new fields representing the selected
+    soil properties.
 
-  * Test the plugin by enabling it in the QGIS plugin manager
+🗺️ On-the-Fly Soil Properties
 
-  * Customize it by editing the implementation file: ``Soil_Grids_Downloader.py``
+-   Click on the QGIS map to select a location and automatically view
+    soil data.
+-   The projection crs should be 4326
+-   Quickly copy results to clipboard with a single button.
 
-  * Create your own custom icon, replacing the default icon.png
+🧪 Accessing Test Data
 
-  * Modify your user interface by opening Soil_Grids_Downloader_dialog_base.ui in Qt Designer
+-   Includes preloaded test data for quick demonstration and exploration.
 
-  * You can use the Makefile to compile your Ui and resource files when
-    you make changes. This requires GNU make (gmake)
+⚙️ Installation
 
-For more information, see the PyQGIS Developer Cookbook at:
-http://www.qgis.org/pyqgis-cookbook/index.html
+1.  Open QGIS.
+2.  Navigate to Plugins → Manage and Install Plugins.
+3.  Search for “Soil Grids Downloader”.
+4.  Click Install Plugin.
 
-(C) 2011-2018 GeoApt LLC - geoapt.com
+✅ No additional installations or dependencies are required — just
+install and start using.
+
+------------------------------------------------------------------------
+
+📊 Supported Soil Properties
+
+Currently supported soil attributes (depth range: 5–15 cm):
+
+-   Clay content
+-   Sand content
+-   Silt content
+-   Soil Organic Carbon (SOC)
+-   Nitrogen content
+
+  Future versions will expand the available properties and depth ranges.
+
+------------------------------------------------------------------------
+
+🚦 Fair Use Policy and Limitations
+
+The plugin retrieves data via the SoilGrids REST API, which enforces a
+Fair Use Policy:
+
+-   Limit: Up to 5 API calls per minute
+-   Exceeding this limit may cause temporary delays or processing errors
+-   Recommended for moderate workloads and small datasets
+
+Both the Soil Grids Downloader and the SoilGrids API are currently in
+beta, meaning: - Occasional downtime or performance issues may occur
+- Compatibility with future versions of the API or plugin is not
+guaranteed
+
+Despite these limitations, the plugin provides a solid foundation for
+soil data exploration and analysis.
+
+------------------------------------------------------------------------
+
+🧩 Development & Maintenance
+
+This is the first demo version of the plugin.
+Ongoing development will focus on: - Supporting more soil properties and
+depth ranges
+- Improving UI responsiveness and data handling
+- Enhancing API communication and error reporting
+
+Contributions, feedback, and issue reports are highly encouraged to
+improve future releases.
+
+------------------------------------------------------------------------
+
+📘 Full documentation is available on Read the Docs for detailed usage
+instructions, examples, and developer guidelines.
+https://soil-grids-downloader.readthedocs.io
+------------------------------------------------------------------------
+
+📜 License
+
+This project is released under an open-source license.
+You may freely use, modify, and share the plugin in accordance with the
+provided license terms.
+
+------------------------------------------------------------------------
+
+📬 Contact
+
+For feedback, bug reports, or feature requests: - Open an issue in this
+repository, or
+- Contact the developer via the QGIS Plugin Repository page.
+
+------------------------------------------------------------------------
+
+© Soil Grids Downloader – QGIS Plugin | Version 1.0 (Demo Release)

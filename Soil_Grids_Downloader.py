@@ -16,7 +16,7 @@
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
+ *   the Free Software Foundation; either version 3 of the License, or     *
  *   (at your option) any later version.                                   *
  *                                                                         *
  ***************************************************************************/
@@ -176,10 +176,10 @@ class Soil_Grids_Downloader:
     def initGui(self):
         """Create the menu entries and toolbar icons inside the QGIS GUI."""
         #con_path = ':/plugins/Soil_Grids_Downloader/icon.png'
-        icon_path = ':/plugins/Soil_Grids_Downloader/plant_2.png'
+        icon_path = ':/plugins/Soil_Grids_Downloader/soil.png'
         self.add_action(
             # icon_path,
-            f'{self.plugin_dir}/plant_2.png',
+            f'{self.plugin_dir}/soil.png',
             text=self.tr(u'Download soil properties data'),
             callback=self.run,
             parent=self.iface.mainWindow())
@@ -334,7 +334,7 @@ class Soil_Grids_Downloader:
 
     def open_help_page(self):
         # Opens a help web page
-        webbrowser.open("https://link.springer.com/journal/11067")
+        webbrowser.open("https://soilgrids-downloader-qgis-plugin.readthedocs.io/en/latest/")
 
     def close_window(self):
         """Closes the dialog window when the button is clicked."""
@@ -343,6 +343,12 @@ class Soil_Grids_Downloader:
 
     def run(self):
         """Run method that performs all the real work"""
+
+        # Check if dialog is already visible - if so, just bring it to front
+        if self.dlg.isVisible():
+            self.dlg.raise_()
+            self.dlg.activateWindow()
+            return
 
         # Create the dialog with elements (after translation) and keep reference
         # Only create GUI ONCE in callback, so that it will only load when the plugin is started
