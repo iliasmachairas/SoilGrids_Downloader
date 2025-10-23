@@ -9,9 +9,9 @@ email=iliasmachairas@outlook.com
 about=The SoilGrids Data Downloader is a QGIS plugin that allows users to easily download high-resolution global soil property datasets (such as organic carbon, pH, bulk density, and soil texture) from the SoilGrids REST API and integrate them directly into QGIS for analysis and mapping.
 
 license=GPL-3.0-or-later
-homepage=https://github.com/iliasmachairas/SoilGrids_Downloader_QGIS_PlugIn
-repository=https://github.com/iliasmachairas/SoilGrids_Downloader_QGIS_PlugIn
-tracker=https://github.com/iliasmachairas/SoilGrids_Downloader_QGIS_PlugIn/issues
+homepage=https://github.com/iliasmachairas/SoilGrids_Downloader
+repository=https://github.com/iliasmachairas/SoilGrids_Downloader
+tracker=https://github.com/iliasmachairas/SoilGrids_Downloader/issues
 
 hasProcessingProvider=no
 changelog=Initial release.
