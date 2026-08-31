@@ -23,7 +23,7 @@
 """
 from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication, Qt
 from qgis.PyQt.QtGui import QIcon, QClipboard
-from qgis.PyQt.QtWidgets import QAction, QFileDialog, QProgressDialog, QApplication
+from qgis.PyQt.QtWidgets import QAction, QFileDialog, QApplication, QDialogButtonBox
 from qgis.core import QgsProject, Qgis, QgsVectorLayer, QgsWkbTypes, QgsMessageLog, QgsMapLayerProxyModel, QgsCoordinateReferenceSystem
 from qgis.core import QgsMapLayerType, QgsVectorFileWriter, QgsField
 from qgis.PyQt.QtCore import QVariant
@@ -356,6 +356,8 @@ class Soil_Grids_Downloader:
             self.first_start = False
             # self.dlg = Soil_Grids_DownloaderDialog()
             self.dlg.toolButton.clicked.connect(self.select_output_file)
+            self.dlg.buttonBox.button(QDialogButtonBox.Ok).setText("Run")
+            self.dlg.buttonBox.accepted.connect(self.run_point_shapefile_download)
 
         # Fetch the currently loaded layers
         # layers = QgsProject.instance().layerTreeRoot().children()
@@ -414,103 +416,105 @@ class Soil_Grids_Downloader:
 
         # show the dialog
         self.dlg.show()
-        # Run the dialog event loop
-        result = self.dlg.exec_()
-        # See if OK was pressed
-        if result:
-            output_filename = self.dlg.mLineEdit.text()
+        # Run the dialog event loop. Processing happens in
+        # run_point_shapefile_download (connected to buttonBox.accepted)
+        # while the dialog is still open, so the embedded progress bar is
+        # visible; that method calls self.dlg.accept() itself when done.
+        self.dlg.exec_()
 
-            # Check if filename is empty
-            if not output_filename:
-                self.iface.messageBar().pushMessage(
-                    "Error", "Please select a valid output filename.",
-                    level=Qgis.Critical, duration=5)
-                return  # Exit if no filename is provided
+    def run_point_shapefile_download(self):
+        output_filename = self.dlg.mLineEdit.text()
 
-            selectedlayer = self.dlg.mMapLayerComboBox.currentLayer()
-            selectedlayername = selectedlayer.name()
-            input_filepath = selectedlayer.dataProvider().dataSourceUri()
+        # Check if filename is empty
+        if not output_filename:
+            self.iface.messageBar().pushMessage(
+                "Error", "Please select a valid output filename.",
+                level=Qgis.Critical, duration=5)
+            return  # Exit if no filename is provided
 
-
-            QgsMessageLog.logMessage(selectedlayername, 'MyPlugin')
-            QgsMessageLog.logMessage(input_filepath, 'MyPlugin')
-
-            # todo fix this warning
-            # Step 1: Write the input shapefile to a new output shapefil5e first (without modifications)
-            writer = QgsVectorFileWriter(output_filename, "UTF-8", selectedlayer.fields(), QgsWkbTypes.Point,
-                                         selectedlayer.crs(), "ESRI Shapefile")
-
-
-            for feature in selectedlayer.getFeatures():
-                print(feature)
-                writer.addFeature(feature)
-
-            del writer  # Close the writer to finish writing the new shapefile
-            QgsMessageLog.logMessage("Shapefile copied", 'MyPlugin')
-
-            # Step 2: Reopen the output shapefile and add a new field for the soil property
-            output_layer = QgsVectorLayer(output_filename, "output_layer", "ogr")
-
-            if not output_layer.isValid():
-                raise Exception(f"Failed to load the output shapefile: {output_filename}")
-
-            # properties = ['clay', 'sand', 'silt', 'soc', 'nitrogen']
-            properties = self.dlg.get_selected_properties()
-            if not properties:
-                self.iface.messageBar().pushMessage(
-                    "Error", "Please select at least one property.",
-                    level=Qgis.Critical, duration=5)
-                return  # Exit if no properties are selected
-
-            # new_column_name = "Clay"
-            for property_name in properties:
-                output_layer.dataProvider().addAttributes([QgsField(property_name, QVariant.Double, "double", 10, 2)])
-            output_layer.updateFields()
-
-            output_layer.startEditing()  # Start an editing session
-
-            total_features = output_layer.featureCount()
-            progress = QProgressDialog(
-                "Downloading soil properties...", "Cancel", 0, total_features, self.iface.mainWindow())
-            progress.setWindowTitle("SoilGrids Downloader")
-            progress.setWindowModality(Qt.WindowModal)
-            progress.setMinimumDuration(0)
-
-            for idx, feature in enumerate(output_layer.getFeatures()):
-                if progress.wasCanceled():
-                    QgsMessageLog.logMessage("Download cancelled by user", 'MyPlugin')
-                    break
-
-                geom = feature.geometry()
-                lat, lon = geom.asPoint().y(), geom.asPoint().x()  # Get latitude and longitude
-                QgsMessageLog.logMessage(f"Latitude: {lat}, Longitude: {lon}", 'MyPlugin', Qgis.Info)
-                # QgsMessageLog.logMessage(str(lat), str(lon), 'MyPlugin')
-
-                # Fetch soil property
-                fetcher = SoilPropertyFetcher(lat, lon)
-                # QgsMessageLog.logMessage(fetcher, 'MyPlugin')
-                try:
-                    property_values = fetcher.fetch_properties(properties)
-                    # QgsMessageLog.logMessage(property_values, 'MyPlugin')
-                    for property_name, value in property_values.items():
-                        feature.setAttribute(feature.fieldNameIndex(property_name), value)
-
-                except Exception as e:
-                    print(f"Failed to fetch data for point ({lat}, {lon}): {e}")
-                    QgsMessageLog.logMessage('Error occurred', 'MyPlugin')
-                    feature.setAttribute(feature.fieldNameIndex(property_name), None)  # Set None if fetching fails
-
-                output_layer.updateFeature(feature)  # Update the feature in the layer
-
-                progress.setValue(idx + 1)
-                QApplication.processEvents()
-
-            progress.close()
-            output_layer.commitChanges()  # Commit the changes to save the edits
-
-            # Shapefile Loading
-            if self.dlg.checkBox_load_shp.isChecked():
-                self.load_shapefile(output_filename)
+        selectedlayer = self.dlg.mMapLayerComboBox.currentLayer()
+        if selectedlayer is None:
+            self.iface.messageBar().pushMessage(
+                "Error", "Please select a point layer.",
+                level=Qgis.Critical, duration=5)
+            return
+        selectedlayername = selectedlayer.name()
+        input_filepath = selectedlayer.dataProvider().dataSourceUri()
 
 
-            print(f"New shapefile updated with soil properties: {output_layer}")
+        QgsMessageLog.logMessage(selectedlayername, 'MyPlugin')
+        QgsMessageLog.logMessage(input_filepath, 'MyPlugin')
+
+        # todo fix this warning
+        # Step 1: Write the input shapefile to a new output shapefil5e first (without modifications)
+        writer = QgsVectorFileWriter(output_filename, "UTF-8", selectedlayer.fields(), QgsWkbTypes.Point,
+                                     selectedlayer.crs(), "ESRI Shapefile")
+
+
+        for feature in selectedlayer.getFeatures():
+            print(feature)
+            writer.addFeature(feature)
+
+        del writer  # Close the writer to finish writing the new shapefile
+        QgsMessageLog.logMessage("Shapefile copied", 'MyPlugin')
+
+        # Step 2: Reopen the output shapefile and add a new field for the soil property
+        output_layer = QgsVectorLayer(output_filename, "output_layer", "ogr")
+
+        if not output_layer.isValid():
+            raise Exception(f"Failed to load the output shapefile: {output_filename}")
+
+        # properties = ['clay', 'sand', 'silt', 'soc', 'nitrogen']
+        properties = self.dlg.get_selected_properties()
+        if not properties:
+            self.iface.messageBar().pushMessage(
+                "Error", "Please select at least one property.",
+                level=Qgis.Critical, duration=5)
+            return  # Exit if no properties are selected
+
+        # new_column_name = "Clay"
+        for property_name in properties:
+            output_layer.dataProvider().addAttributes([QgsField(property_name, QVariant.Double, "double", 10, 2)])
+        output_layer.updateFields()
+
+        output_layer.startEditing()  # Start an editing session
+
+        total_features = output_layer.featureCount()
+        self.dlg.progressBar_tab2.setMaximum(total_features)
+        self.dlg.progressBar_tab2.setValue(0)
+        self.dlg.progressBar_tab2.setFormat("%v / %m points")
+
+        for idx, feature in enumerate(output_layer.getFeatures()):
+            geom = feature.geometry()
+            lat, lon = geom.asPoint().y(), geom.asPoint().x()  # Get latitude and longitude
+            QgsMessageLog.logMessage(f"Latitude: {lat}, Longitude: {lon}", 'MyPlugin', Qgis.Info)
+            # QgsMessageLog.logMessage(str(lat), str(lon), 'MyPlugin')
+
+            # Fetch soil property
+            fetcher = SoilPropertyFetcher(lat, lon)
+            # QgsMessageLog.logMessage(fetcher, 'MyPlugin')
+            try:
+                property_values = fetcher.fetch_properties(properties)
+                # QgsMessageLog.logMessage(property_values, 'MyPlugin')
+                for property_name, value in property_values.items():
+                    feature.setAttribute(feature.fieldNameIndex(property_name), value)
+
+            except Exception as e:
+                print(f"Failed to fetch data for point ({lat}, {lon}): {e}")
+                QgsMessageLog.logMessage('Error occurred', 'MyPlugin')
+                feature.setAttribute(feature.fieldNameIndex(property_name), None)  # Set None if fetching fails
+
+            output_layer.updateFeature(feature)  # Update the feature in the layer
+
+            self.dlg.progressBar_tab2.setValue(idx + 1)
+            QApplication.processEvents()
+
+        output_layer.commitChanges()  # Commit the changes to save the edits
+
+        # Shapefile Loading
+        if self.dlg.checkBox_load_shp.isChecked():
+            self.load_shapefile(output_filename)
+
+        print(f"New shapefile updated with soil properties: {output_layer}")
+        self.dlg.progressBar_tab2.setValue(0)
+        self.dlg.accept()
