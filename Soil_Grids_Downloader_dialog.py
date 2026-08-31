@@ -35,9 +35,9 @@ FORM_CLASS, _ = uic.loadUiType(os.path.join(
 
 # Widgets shown only in "Draw on map" raster AOI mode
 _RASTER_DRAW_WIDGETS = (
-    "pushButton_draw_extent", "label_9", "lineEdit_raster_top",
-    "label_10", "lineEdit_raster_left", "label_11", "lineEdit_raster_right",
-    "label_12", "lineEdit_raster_bottom",
+    "pushButton_draw_extent", "label_raster_top", "lineEdit_raster_top",
+    "label_raster_left", "lineEdit_raster_left", "label_raster_right", "lineEdit_raster_right",
+    "label_raster_bottom", "lineEdit_raster_bottom",
 )
 # Widgets shown only in "From layer" raster AOI mode
 _RASTER_LAYER_WIDGETS = ("comboBox_raster_aoi_layer", "label_raster_aoi_layer_hint")

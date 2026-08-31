@@ -644,7 +644,7 @@ p, li { white-space: pre-wrap; }
       </layout>
      </widget>
     </widget>
-    <widget class="QLabel" name="label_7">
+    <widget class="QLabel" name="label_raster_select_property">
      <property name="geometry">
       <rect>
        <x>20</x>
@@ -657,7 +657,7 @@ p, li { white-space: pre-wrap; }
       <string>Select soil property</string>
      </property>
     </widget>
-    <widget class="QLabel" name="label_8">
+    <widget class="QLabel" name="label_raster_aoi_title">
      <property name="geometry">
       <rect>
        <x>150</x>
@@ -699,7 +699,7 @@ p, li { white-space: pre-wrap; }
       <string>From layer</string>
      </property>
     </widget>
-    <widget class="QLabel" name="label_9">
+    <widget class="QLabel" name="label_raster_top">
      <property name="geometry">
       <rect>
        <x>150</x>
@@ -722,7 +722,7 @@ p, li { white-space: pre-wrap; }
       </rect>
      </property>
     </widget>
-    <widget class="QLabel" name="label_10">
+    <widget class="QLabel" name="label_raster_left">
      <property name="geometry">
       <rect>
        <x>150</x>
@@ -745,7 +745,7 @@ p, li { white-space: pre-wrap; }
       </rect>
      </property>
     </widget>
-    <widget class="QLabel" name="label_11">
+    <widget class="QLabel" name="label_raster_right">
      <property name="geometry">
       <rect>
        <x>360</x>
@@ -768,7 +768,7 @@ p, li { white-space: pre-wrap; }
       </rect>
      </property>
     </widget>
-    <widget class="QLabel" name="label_12">
+    <widget class="QLabel" name="label_raster_bottom">
      <property name="geometry">
       <rect>
        <x>150</x>
@@ -830,7 +830,7 @@ p, li { white-space: pre-wrap; }
       <bool>true</bool>
      </property>
     </widget>
-    <widget class="QLabel" name="label_13">
+    <widget class="QLabel" name="label_raster_save_as">
      <property name="geometry">
       <rect>
        <x>150</x>
@@ -840,7 +840,7 @@ p, li { white-space: pre-wrap; }
       </rect>
      </property>
      <property name="text">
-      <string>Save output</string>
+      <string>Save output as</string>
      </property>
     </widget>
     <widget class="QLineEdit" name="lineEdit_raster_output">

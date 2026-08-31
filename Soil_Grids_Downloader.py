@@ -362,8 +362,9 @@ class Soil_Grids_Downloader:
 
             # Download raster tab
             self.dlg.pushButton_draw_extent.clicked.connect(self.start_draw_raster_extent)
-            self.dlg.toolButton_raster_output.clicked.connect(self.select_raster_output_folder)
+            self.dlg.toolButton_raster_output.clicked.connect(self.select_raster_output_file)
             self.dlg.pushButton_run_raster.clicked.connect(self.run_raster_download)
+            self.dlg.comboBox_raster_aoi_layer.layerChanged.connect(self.handle_raster_layer_changed)
 
         # Fetch the currently loaded layers
         # layers = QgsProject.instance().layerTreeRoot().children()
@@ -556,13 +557,53 @@ class Soil_Grids_Downloader:
         self.dlg.raise_()
         self.dlg.activateWindow()
         self.iface.mapCanvas().setMapTool(QgsMapToolPan(self.iface.mapCanvas()))
+        self._show_aoi_size_feedback(xmin, ymin, xmax, ymax)
 
-    def select_raster_output_folder(self):
-        folder = QFileDialog.getExistingDirectory(
-            self.dlg, "Select output folder",
-            self.dlg.lineEdit_raster_output.text() or os.path.expanduser("~"))
-        if folder:
-            self.dlg.lineEdit_raster_output.setText(folder)
+    def handle_raster_layer_changed(self, layer):
+        """Callback from the 'From layer' combo - shows AOI size feedback for the newly picked layer."""
+        if layer is None:
+            self.dlg.label_raster_status.setText("")
+            return
+        extent = layer.extent()
+        wgs84 = QgsCoordinateReferenceSystem("EPSG:4326")
+        if layer.crs() != wgs84:
+            transform = QgsCoordinateTransform(layer.crs(), wgs84, QgsProject.instance())
+            extent = transform.transformBoundingBox(extent)
+        self._show_aoi_size_feedback(
+            extent.xMinimum(), extent.yMinimum(), extent.xMaximum(), extent.yMaximum())
+
+    # SoilGrids native resolution is 250m (~0.00225 deg at the equator).
+    # These are soft usability guards rather than hard limits: below
+    # roughly 1km per side there are only a handful of pixels to sample,
+    # and above roughly 20 degrees per side the clip starts running into
+    # hundreds of millions of pixels per property.
+    _MIN_AOI_DEGREES = 0.01
+    _MAX_AOI_DEGREES = 20.0
+
+    def _aoi_size_status(self, xmin, ymin, xmax, ymax):
+        """Return (level, message) describing the AOI size, where level is
+        'ok', 'warning' (too large, still allowed) or 'error' (too small)."""
+        width = xmax - xmin
+        height = ymax - ymin
+        if width <= 0 or height <= 0:
+            return "error", "Invalid area of interest."
+        if width < self._MIN_AOI_DEGREES or height < self._MIN_AOI_DEGREES:
+            return "error", f"Area too small ({width:.4f} x {height:.4f} degrees) - draw or pick a larger area."
+        if width > self._MAX_AOI_DEGREES or height > self._MAX_AOI_DEGREES:
+            return "warning", f"Area too large ({width:.2f} x {height:.2f} degrees) - download may be slow and produce large files."
+        return "ok", f"Area OK ({width:.4f} x {height:.4f} degrees)."
+
+    def _show_aoi_size_feedback(self, xmin, ymin, xmax, ymax):
+        _, message = self._aoi_size_status(xmin, ymin, xmax, ymax)
+        self.dlg.label_raster_status.setText(message)
+
+    def select_raster_output_file(self):
+        path, _ = QFileDialog.getSaveFileName(
+            self.dlg, "Save raster as",
+            self.dlg.lineEdit_raster_output.text() or os.path.join(os.path.expanduser("~"), "soilgrids.tif"),
+            "GeoTIFF (*.tif)")
+        if path:
+            self.dlg.lineEdit_raster_output.setText(path)
 
     def run_raster_download(self):
         # Same re-entrancy guard as run_point_shapefile_download: the loop
@@ -601,6 +642,16 @@ class Soil_Grids_Downloader:
                 extent = transform.transformBoundingBox(extent)
             bbox = (extent.xMinimum(), extent.yMinimum(), extent.xMaximum(), extent.yMaximum())
 
+        level, message = self._aoi_size_status(*bbox)
+        if level == "error":
+            self.iface.messageBar().pushMessage(
+                "Error", message, level=Qgis.Critical, duration=5)
+            self.dlg.label_raster_status.setText(message)
+            return
+        if level == "warning":
+            self.iface.messageBar().pushMessage(
+                "Warning", message, level=Qgis.Warning, duration=5)
+
         properties = self.dlg.get_selected_raster_properties()
         if not properties:
             self.iface.messageBar().pushMessage(
@@ -608,17 +659,21 @@ class Soil_Grids_Downloader:
                 level=Qgis.Critical, duration=5)
             return
 
-        output_dir = self.dlg.lineEdit_raster_output.text().strip()
-        if not output_dir:
+        output_base = self.dlg.lineEdit_raster_output.text().strip()
+        if not output_base:
             self.iface.messageBar().pushMessage(
-                "Error", "Please select an output folder.",
+                "Error", "Please choose where to save the file.",
                 level=Qgis.Critical, duration=5)
             return
-        if not os.path.isdir(output_dir):
+        output_dir = os.path.dirname(output_base)
+        if output_dir and not os.path.isdir(output_dir):
             self.iface.messageBar().pushMessage(
                 "Error", f"Output folder does not exist: {output_dir}",
                 level=Qgis.Critical, duration=5)
             return
+
+        base, ext = os.path.splitext(output_base)
+        ext = ext or ".tif"
 
         self.dlg.progressBar_tab5.setMaximum(len(properties))
         self.dlg.progressBar_tab5.setValue(0)
@@ -628,7 +683,13 @@ class Soil_Grids_Downloader:
             self.dlg.label_raster_status.setText(f"Downloading {property_name}...")
             QApplication.processEvents()
 
-            output_path = os.path.join(output_dir, f"{property_name}_5-15cm_mean.tif")
+            # A single selected property is saved exactly at the chosen
+            # path; multiple properties each get the property name worked
+            # into the filename so they don't overwrite one another.
+            if len(properties) == 1:
+                output_path = base + ext
+            else:
+                output_path = f"{base}_{property_name}{ext}"
             try:
                 download_property_raster(property_name, bbox, output_path)
                 saved += 1
