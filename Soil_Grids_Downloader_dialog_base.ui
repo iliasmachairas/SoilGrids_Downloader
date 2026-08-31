@@ -717,7 +717,7 @@ p, li { white-space: pre-wrap; }
       <rect>
        <x>250</x>
        <y>63</y>
-       <width>100</width>
+       <width>70</width>
        <height>21</height>
       </rect>
      </property>
@@ -740,7 +740,7 @@ p, li { white-space: pre-wrap; }
       <rect>
        <x>250</x>
        <y>93</y>
-       <width>100</width>
+       <width>70</width>
        <height>21</height>
       </rect>
      </property>
@@ -763,7 +763,7 @@ p, li { white-space: pre-wrap; }
       <rect>
        <x>460</x>
        <y>93</y>
-       <width>100</width>
+       <width>70</width>
        <height>21</height>
       </rect>
      </property>
@@ -786,7 +786,7 @@ p, li { white-space: pre-wrap; }
       <rect>
        <x>250</x>
        <y>123</y>
-       <width>100</width>
+       <width>70</width>
        <height>21</height>
       </rect>
      </property>
@@ -866,11 +866,24 @@ p, li { white-space: pre-wrap; }
       <string>...</string>
      </property>
     </widget>
+    <widget class="QCheckBox" name="checkBox_load_raster">
+     <property name="geometry">
+      <rect>
+       <x>150</x>
+       <y>240</y>
+       <width>310</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Open output file(s) after running algorithm</string>
+     </property>
+    </widget>
     <widget class="QLabel" name="label_raster_status">
      <property name="geometry">
       <rect>
        <x>20</x>
-       <y>250</y>
+       <y>270</y>
        <width>481</width>
        <height>20</height>
       </rect>
@@ -883,7 +896,7 @@ p, li { white-space: pre-wrap; }
      <property name="geometry">
       <rect>
        <x>20</x>
-       <y>275</y>
+       <y>295</y>
        <width>481</width>
        <height>23</height>
       </rect>
@@ -896,7 +909,7 @@ p, li { white-space: pre-wrap; }
      <property name="geometry">
       <rect>
        <x>401</x>
-       <y>310</y>
+       <y>330</y>
        <width>100</width>
        <height>28</height>
       </rect>

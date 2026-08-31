@@ -24,7 +24,7 @@
 from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication, Qt
 from qgis.PyQt.QtGui import QIcon, QClipboard
 from qgis.PyQt.QtWidgets import QAction, QFileDialog, QApplication, QDialogButtonBox
-from qgis.core import QgsProject, Qgis, QgsVectorLayer, QgsWkbTypes, QgsMessageLog, QgsMapLayerProxyModel, QgsCoordinateReferenceSystem, QgsCoordinateTransform
+from qgis.core import QgsProject, Qgis, QgsVectorLayer, QgsRasterLayer, QgsWkbTypes, QgsMessageLog, QgsMapLayerProxyModel, QgsCoordinateReferenceSystem, QgsCoordinateTransform
 from qgis.core import QgsMapLayerType, QgsVectorFileWriter, QgsField
 from qgis.PyQt.QtCore import QVariant
 from qgis.gui import QgsMapToolEmitPoint, QgsMapToolPan
@@ -226,6 +226,15 @@ class Soil_Grids_Downloader:
             # Add the layer to the current QGIS project
             QgsProject.instance().addMapLayer(layer)
             print(f"Shapefile {filepath} loaded successfully.")
+
+    def load_raster_layer(self, filepath):
+        layer_name = os.path.splitext(os.path.basename(filepath))[0]
+        layer = QgsRasterLayer(filepath, layer_name)
+
+        if not layer.isValid():
+            QgsMessageLog.logMessage(f"Failed to load the raster: {filepath}", 'MyPlugin')
+        else:
+            QgsProject.instance().addMapLayer(layer)
 
     # Click on the map
     def setup_point_tool(self):
@@ -678,7 +687,7 @@ class Soil_Grids_Downloader:
         self.dlg.progressBar_tab5.setMaximum(len(properties))
         self.dlg.progressBar_tab5.setValue(0)
 
-        saved = 0
+        saved_paths = []
         for idx, property_name in enumerate(properties):
             self.dlg.label_raster_status.setText(f"Downloading {property_name}...")
             QApplication.processEvents()
@@ -692,7 +701,7 @@ class Soil_Grids_Downloader:
                 output_path = f"{base}_{property_name}{ext}"
             try:
                 download_property_raster(property_name, bbox, output_path)
-                saved += 1
+                saved_paths.append(output_path)
             except Exception as e:
                 QgsMessageLog.logMessage(f"Failed to download raster for {property_name}: {e}", 'MyPlugin')
                 self.iface.messageBar().pushMessage(
@@ -702,4 +711,9 @@ class Soil_Grids_Downloader:
             self.dlg.progressBar_tab5.setValue(idx + 1)
             QApplication.processEvents()
 
-        self.dlg.label_raster_status.setText(f"Done - saved {saved} of {len(properties)} raster(s) to {output_dir}")
+        if self.dlg.checkBox_load_raster.isChecked():
+            for path in saved_paths:
+                self.load_raster_layer(path)
+
+        self.dlg.label_raster_status.setText(
+            f"Done - saved {len(saved_paths)} of {len(properties)} raster(s) to {output_dir}")
