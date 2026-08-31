@@ -2,7 +2,7 @@
 name=Soil Grids Downloader
 qgisMinimumVersion=3.0
 description=Download and visualize global soil property data directly from SoilGrids.
-version=0.1.2
+version=0.1.3
 author=Ilias Machairas
 email=iliasmachairas@outlook.com
 
@@ -14,7 +14,7 @@ repository=https://github.com/iliasmachairas/SoilGrids_Downloader
 tracker=https://github.com/iliasmachairas/SoilGrids_Downloader/issues
 
 hasProcessingProvider=no
-changelog=0.1.2: fixed plugin icon not appearing in the QGIS Plugin Manager and plugins.qgis.org (metadata.txt pointed at a nonexistent icon.png; now points at soil.png). Point/on-the-fly lookups and the new raster export now read SoilGrids data directly from ISRIC's cloud-optimized rasters instead of the rate-limited REST API. Added a "Download raster" tab for clipping a property to an area as a GeoTIFF. 0.1: Initial release.
+changelog=0.1.3: fixed Qt6-compatibility issues (fully-qualified enum paths, exec() instead of exec_()) and code-quality/security scan findings. 0.1.2: fixed plugin icon not appearing in the QGIS Plugin Manager and plugins.qgis.org (metadata.txt pointed at a nonexistent icon.png; now points at soil.png). Point/on-the-fly lookups and the new raster export now read SoilGrids data directly from ISRIC's cloud-optimized rasters instead of the rate-limited REST API. Added a "Download raster" tab for clipping a property to an area as a GeoTIFF. 0.1: Initial release.
 tags=soil, soilgrids, downloader, raster, web, api, environment, QGIS
 category=Web
 icon=soil.png
