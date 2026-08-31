@@ -24,7 +24,7 @@ class SoilPropertyFetcher:
         full_url = self.construct_url(properties)
 
         for i in range(retries):
-            response = requests.get(full_url, headers={'accept': 'application/json'})
+            response = requests.get(full_url, headers={'accept': 'application/json'}, timeout=30)
             if response.status_code == 200:
                 data = response.json()
 
@@ -46,7 +46,6 @@ class SoilPropertyFetcher:
                     else:
                         results[property_name] = None
 
-                time.sleep(12)  # Prevent rate-limiting
                 break
 
             elif response.status_code == 429:

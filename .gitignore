@@ -1,0 +1,36 @@
+# Claude / AI assistant artifacts
+.claude/
+CLAUDE.md
+claude.md
+.claude.json
+.mcp.json
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ipynb_checkpoints/
+
+# Distribution / packaging
+dist/
+build/
+*.zip
+
+# Virtual environments
+.env
+.venv
+env/
+
+# QGIS / editor cruft
+*.qgis2
+*.bak
+
+# Sphinx build output
+docs/_build/
+
+# Editor/OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

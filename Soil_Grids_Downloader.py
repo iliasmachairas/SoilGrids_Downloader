@@ -469,7 +469,8 @@ class Soil_Grids_Downloader:
 
             output_layer.startEditing()  # Start an editing session
 
-            for feature in output_layer.getFeatures():
+            total_features = output_layer.featureCount()
+            for idx, feature in enumerate(output_layer.getFeatures()):
                 geom = feature.geometry()
                 lat, lon = geom.asPoint().y(), geom.asPoint().x()  # Get latitude and longitude
                 QgsMessageLog.logMessage(f"Latitude: {lat}, Longitude: {lon}", 'MyPlugin', Qgis.Info)
@@ -490,6 +491,9 @@ class Soil_Grids_Downloader:
                     feature.setAttribute(feature.fieldNameIndex(property_name), None)  # Set None if fetching fails
 
                 output_layer.updateFeature(feature)  # Update the feature in the layer
+
+                if idx < total_features - 1:
+                    time.sleep(12)  # ISRIC SoilGrids rate limit: ~5 requests/minute
 
             output_layer.commitChanges()  # Commit the changes to save the edits
 
