@@ -26,10 +26,21 @@ import os
 
 from qgis.PyQt import uic
 from qgis.PyQt import QtWidgets
+from qgis.PyQt.QtWidgets import QButtonGroup
+from qgis.core import QgsMapLayerProxyModel
 
 # This loads your .ui file so that PyQt can populate your plugin with the elements from Qt Designer
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'Soil_Grids_Downloader_dialog_base.ui'))
+
+# Widgets shown only in "Draw on map" raster AOI mode
+_RASTER_DRAW_WIDGETS = (
+    "pushButton_draw_extent", "label_9", "lineEdit_raster_top",
+    "label_10", "lineEdit_raster_left", "label_11", "lineEdit_raster_right",
+    "label_12", "lineEdit_raster_bottom",
+)
+# Widgets shown only in "From layer" raster AOI mode
+_RASTER_LAYER_WIDGETS = ("comboBox_raster_aoi_layer", "label_raster_aoi_layer_hint")
 
 
 class Soil_Grids_DownloaderDialog(QtWidgets.QDialog, FORM_CLASS):
@@ -42,6 +53,21 @@ class Soil_Grids_DownloaderDialog(QtWidgets.QDialog, FORM_CLASS):
         # http://qt-project.org/doc/qt-4.8/designer-using-a-ui-file.html
         # #widgets-and-dialogs-with-auto-connect
         self.setupUi(self)
+
+        self.comboBox_raster_aoi_layer.setFilters(QgsMapLayerProxyModel.PolygonLayer)
+
+        self.rasterAoiGroup = QButtonGroup(self)
+        self.rasterAoiGroup.addButton(self.radioBtn_raster_aoi_draw, 0)
+        self.rasterAoiGroup.addButton(self.radioBtn_raster_aoi_layer, 1)
+        self.radioBtn_raster_aoi_draw.toggled.connect(self._update_raster_aoi_mode)
+        self._update_raster_aoi_mode()
+
+    def _update_raster_aoi_mode(self):
+        draw_mode = self.radioBtn_raster_aoi_draw.isChecked()
+        for name in _RASTER_DRAW_WIDGETS:
+            getattr(self, name).setVisible(draw_mode)
+        for name in _RASTER_LAYER_WIDGETS:
+            getattr(self, name).setVisible(not draw_mode)
 
     # check it again
     def get_selected_properties(self):
@@ -97,3 +123,10 @@ class Soil_Grids_DownloaderDialog(QtWidgets.QDialog, FORM_CLASS):
         self.lineEdit_raster_right.setText(f"{xmax:.6f}")
         self.lineEdit_raster_bottom.setText(f"{ymin:.6f}")
         self.lineEdit_raster_top.setText(f"{ymax:.6f}")
+
+    def get_raster_aoi_source(self):
+        return "draw" if self.radioBtn_raster_aoi_draw.isChecked() else "layer"
+
+    def get_raster_aoi_layer(self):
+        """Return the QgsVectorLayer selected in the 'From layer' combo, or None."""
+        return self.comboBox_raster_aoi_layer.currentLayer()

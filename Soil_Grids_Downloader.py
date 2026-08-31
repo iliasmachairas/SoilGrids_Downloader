@@ -24,7 +24,7 @@
 from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication, Qt
 from qgis.PyQt.QtGui import QIcon, QClipboard
 from qgis.PyQt.QtWidgets import QAction, QFileDialog, QApplication, QDialogButtonBox
-from qgis.core import QgsProject, Qgis, QgsVectorLayer, QgsWkbTypes, QgsMessageLog, QgsMapLayerProxyModel, QgsCoordinateReferenceSystem
+from qgis.core import QgsProject, Qgis, QgsVectorLayer, QgsWkbTypes, QgsMessageLog, QgsMapLayerProxyModel, QgsCoordinateReferenceSystem, QgsCoordinateTransform
 from qgis.core import QgsMapLayerType, QgsVectorFileWriter, QgsField
 from qgis.PyQt.QtCore import QVariant
 from qgis.gui import QgsMapToolEmitPoint, QgsMapToolPan
@@ -580,12 +580,26 @@ class Soil_Grids_Downloader:
             self._raster_download_running = False
 
     def _download_raster(self):
-        try:
-            bbox = self.dlg.get_raster_aoi()
-        except ValueError as e:
-            self.iface.messageBar().pushMessage(
-                "Error", str(e), level=Qgis.Critical, duration=5)
-            return
+        if self.dlg.get_raster_aoi_source() == "draw":
+            try:
+                bbox = self.dlg.get_raster_aoi()
+            except ValueError as e:
+                self.iface.messageBar().pushMessage(
+                    "Error", str(e), level=Qgis.Critical, duration=5)
+                return
+        else:
+            layer = self.dlg.get_raster_aoi_layer()
+            if layer is None:
+                self.iface.messageBar().pushMessage(
+                    "Error", "Please select a polygon layer.",
+                    level=Qgis.Critical, duration=5)
+                return
+            extent = layer.extent()
+            wgs84 = QgsCoordinateReferenceSystem("EPSG:4326")
+            if layer.crs() != wgs84:
+                transform = QgsCoordinateTransform(layer.crs(), wgs84, QgsProject.instance())
+                extent = transform.transformBoundingBox(extent)
+            bbox = (extent.xMinimum(), extent.yMinimum(), extent.xMaximum(), extent.yMaximum())
 
         properties = self.dlg.get_selected_raster_properties()
         if not properties:

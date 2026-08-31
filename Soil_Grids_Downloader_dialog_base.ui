@@ -670,11 +670,40 @@ p, li { white-space: pre-wrap; }
       <string>Area of interest (EPSG:4326, degrees)</string>
      </property>
     </widget>
+    <widget class="QRadioButton" name="radioBtn_raster_aoi_draw">
+     <property name="geometry">
+      <rect>
+       <x>150</x>
+       <y>35</y>
+       <width>110</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Draw on map</string>
+     </property>
+     <property name="checked">
+      <bool>true</bool>
+     </property>
+    </widget>
+    <widget class="QRadioButton" name="radioBtn_raster_aoi_layer">
+     <property name="geometry">
+      <rect>
+       <x>270</x>
+       <y>35</y>
+       <width>110</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>From layer</string>
+     </property>
+    </widget>
     <widget class="QLabel" name="label_9">
      <property name="geometry">
       <rect>
        <x>150</x>
-       <y>42</y>
+       <y>65</y>
        <width>91</width>
        <height>16</height>
       </rect>
@@ -687,7 +716,7 @@ p, li { white-space: pre-wrap; }
      <property name="geometry">
       <rect>
        <x>250</x>
-       <y>40</y>
+       <y>63</y>
        <width>100</width>
        <height>21</height>
       </rect>
@@ -697,7 +726,7 @@ p, li { white-space: pre-wrap; }
      <property name="geometry">
       <rect>
        <x>150</x>
-       <y>72</y>
+       <y>95</y>
        <width>91</width>
        <height>16</height>
       </rect>
@@ -710,7 +739,7 @@ p, li { white-space: pre-wrap; }
      <property name="geometry">
       <rect>
        <x>250</x>
-       <y>70</y>
+       <y>93</y>
        <width>100</width>
        <height>21</height>
       </rect>
@@ -720,7 +749,7 @@ p, li { white-space: pre-wrap; }
      <property name="geometry">
       <rect>
        <x>360</x>
-       <y>72</y>
+       <y>95</y>
        <width>101</width>
        <height>16</height>
       </rect>
@@ -733,7 +762,7 @@ p, li { white-space: pre-wrap; }
      <property name="geometry">
       <rect>
        <x>460</x>
-       <y>70</y>
+       <y>93</y>
        <width>100</width>
        <height>21</height>
       </rect>
@@ -743,7 +772,7 @@ p, li { white-space: pre-wrap; }
      <property name="geometry">
       <rect>
        <x>150</x>
-       <y>102</y>
+       <y>125</y>
        <width>101</width>
        <height>16</height>
       </rect>
@@ -756,7 +785,7 @@ p, li { white-space: pre-wrap; }
      <property name="geometry">
       <rect>
        <x>250</x>
-       <y>100</y>
+       <y>123</y>
        <width>100</width>
        <height>21</height>
       </rect>
@@ -766,7 +795,7 @@ p, li { white-space: pre-wrap; }
      <property name="geometry">
       <rect>
        <x>150</x>
-       <y>135</y>
+       <y>158</y>
        <width>160</width>
        <height>28</height>
       </rect>
@@ -775,24 +804,50 @@ p, li { white-space: pre-wrap; }
       <string>Draw on map</string>
      </property>
     </widget>
+    <widget class="QgsMapLayerComboBox" name="comboBox_raster_aoi_layer">
+     <property name="geometry">
+      <rect>
+       <x>150</x>
+       <y>65</y>
+       <width>300</width>
+       <height>27</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_raster_aoi_layer_hint">
+     <property name="geometry">
+      <rect>
+       <x>150</x>
+       <y>98</y>
+       <width>340</width>
+       <height>32</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Only polygon layers are listed. The layer's bounding box is used as the area of interest.</string>
+     </property>
+     <property name="wordWrap">
+      <bool>true</bool>
+     </property>
+    </widget>
     <widget class="QLabel" name="label_13">
      <property name="geometry">
       <rect>
        <x>150</x>
-       <y>180</y>
+       <y>195</y>
        <width>121</width>
        <height>16</height>
       </rect>
      </property>
      <property name="text">
-      <string>Save to folder</string>
+      <string>Save output</string>
      </property>
     </widget>
     <widget class="QLineEdit" name="lineEdit_raster_output">
      <property name="geometry">
       <rect>
        <x>150</x>
-       <y>200</y>
+       <y>215</y>
        <width>310</width>
        <height>21</height>
       </rect>
@@ -802,7 +857,7 @@ p, li { white-space: pre-wrap; }
      <property name="geometry">
       <rect>
        <x>470</x>
-       <y>200</y>
+       <y>215</y>
        <width>31</width>
        <height>21</height>
       </rect>
@@ -815,7 +870,7 @@ p, li { white-space: pre-wrap; }
      <property name="geometry">
       <rect>
        <x>20</x>
-       <y>235</y>
+       <y>250</y>
        <width>481</width>
        <height>20</height>
       </rect>
@@ -828,7 +883,7 @@ p, li { white-space: pre-wrap; }
      <property name="geometry">
       <rect>
        <x>20</x>
-       <y>260</y>
+       <y>275</y>
        <width>481</width>
        <height>23</height>
       </rect>
@@ -841,7 +896,7 @@ p, li { white-space: pre-wrap; }
      <property name="geometry">
       <rect>
        <x>401</x>
-       <y>295</y>
+       <y>310</y>
        <width>100</width>
        <height>28</height>
       </rect>
