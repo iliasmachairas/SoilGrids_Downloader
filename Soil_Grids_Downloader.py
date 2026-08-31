@@ -423,6 +423,22 @@ class Soil_Grids_Downloader:
         self.dlg.exec_()
 
     def run_point_shapefile_download(self):
+        # Guard against re-entrancy: the download loop below calls
+        # QApplication.processEvents() to keep the UI responsive, which
+        # means a rapid second click on "Run" would otherwise re-enter this
+        # method while the first download is still writing the shapefile.
+        if getattr(self, '_download_running', False):
+            return
+        self._download_running = True
+        run_button = self.dlg.buttonBox.button(QDialogButtonBox.Ok)
+        run_button.setEnabled(False)
+        try:
+            self._download_point_shapefile()
+        finally:
+            run_button.setEnabled(True)
+            self._download_running = False
+
+    def _download_point_shapefile(self):
         output_filename = self.dlg.mLineEdit.text()
 
         # Check if filename is empty
