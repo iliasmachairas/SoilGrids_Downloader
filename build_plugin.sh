@@ -49,7 +49,7 @@ echo
 EXCLUDES=(
     "__pycache__" "*.pyc" ".git" ".gitignore" ".claude" "CLAUDE.md" "*.zip"
     "build" "dist" ".pytest_cache" "test" "build_plugin.sh" "source" ".readthedocs.yaml"
-    "help" "scripts" "test_point_shp" "make.bat" "Makefile"
+    "help" "scripts" "test_point_shp" "make.bat" "Makefile" "symbology-style.db"
 )
 
 STAGE="$(mktemp -d)"

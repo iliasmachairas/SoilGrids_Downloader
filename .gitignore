@@ -25,6 +25,7 @@ env/
 # QGIS / editor cruft
 *.qgis2
 *.bak
+symbology-style.db
 
 # Sphinx build output
 docs/_build/
