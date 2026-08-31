@@ -702,11 +702,14 @@ p, li { white-space: pre-wrap; }
     <widget class="QLabel" name="label_raster_top">
      <property name="geometry">
       <rect>
-       <x>150</x>
-       <y>65</y>
-       <width>91</width>
+       <x>320</x>
+       <y>53</y>
+       <width>140</width>
        <height>16</height>
       </rect>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
      </property>
      <property name="text">
       <string>Top (max lat)</string>
@@ -715,8 +718,8 @@ p, li { white-space: pre-wrap; }
     <widget class="QLineEdit" name="lineEdit_raster_top">
      <property name="geometry">
       <rect>
-       <x>250</x>
-       <y>63</y>
+       <x>355</x>
+       <y>70</y>
        <width>70</width>
        <height>21</height>
       </rect>
@@ -738,8 +741,8 @@ p, li { white-space: pre-wrap; }
     <widget class="QLineEdit" name="lineEdit_raster_left">
      <property name="geometry">
       <rect>
-       <x>250</x>
-       <y>93</y>
+       <x>150</x>
+       <y>112</y>
        <width>70</width>
        <height>21</height>
       </rect>
@@ -748,7 +751,7 @@ p, li { white-space: pre-wrap; }
     <widget class="QLabel" name="label_raster_right">
      <property name="geometry">
       <rect>
-       <x>360</x>
+       <x>450</x>
        <y>95</y>
        <width>101</width>
        <height>16</height>
@@ -761,8 +764,8 @@ p, li { white-space: pre-wrap; }
     <widget class="QLineEdit" name="lineEdit_raster_right">
      <property name="geometry">
       <rect>
-       <x>460</x>
-       <y>93</y>
+       <x>450</x>
+       <y>112</y>
        <width>70</width>
        <height>21</height>
       </rect>
@@ -771,11 +774,14 @@ p, li { white-space: pre-wrap; }
     <widget class="QLabel" name="label_raster_bottom">
      <property name="geometry">
       <rect>
-       <x>150</x>
-       <y>125</y>
-       <width>101</width>
+       <x>320</x>
+       <y>137</y>
+       <width>140</width>
        <height>16</height>
       </rect>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
      </property>
      <property name="text">
       <string>Bottom (min lat)</string>
@@ -784,8 +790,8 @@ p, li { white-space: pre-wrap; }
     <widget class="QLineEdit" name="lineEdit_raster_bottom">
      <property name="geometry">
       <rect>
-       <x>250</x>
-       <y>123</y>
+       <x>355</x>
+       <y>154</y>
        <width>70</width>
        <height>21</height>
       </rect>
@@ -795,7 +801,7 @@ p, li { white-space: pre-wrap; }
      <property name="geometry">
       <rect>
        <x>150</x>
-       <y>158</y>
+       <y>185</y>
        <width>160</width>
        <height>28</height>
       </rect>
@@ -808,8 +814,8 @@ p, li { white-space: pre-wrap; }
      <property name="geometry">
       <rect>
        <x>150</x>
-       <y>65</y>
-       <width>300</width>
+       <y>60</y>
+       <width>380</width>
        <height>27</height>
       </rect>
      </property>
@@ -818,8 +824,8 @@ p, li { white-space: pre-wrap; }
      <property name="geometry">
       <rect>
        <x>150</x>
-       <y>98</y>
-       <width>340</width>
+       <y>92</y>
+       <width>380</width>
        <height>32</height>
       </rect>
      </property>
@@ -834,7 +840,7 @@ p, li { white-space: pre-wrap; }
      <property name="geometry">
       <rect>
        <x>150</x>
-       <y>195</y>
+       <y>220</y>
        <width>121</width>
        <height>16</height>
       </rect>
@@ -847,7 +853,7 @@ p, li { white-space: pre-wrap; }
      <property name="geometry">
       <rect>
        <x>150</x>
-       <y>215</y>
+       <y>240</y>
        <width>310</width>
        <height>21</height>
       </rect>
@@ -857,7 +863,7 @@ p, li { white-space: pre-wrap; }
      <property name="geometry">
       <rect>
        <x>470</x>
-       <y>215</y>
+       <y>240</y>
        <width>31</width>
        <height>21</height>
       </rect>
@@ -870,7 +876,7 @@ p, li { white-space: pre-wrap; }
      <property name="geometry">
       <rect>
        <x>150</x>
-       <y>240</y>
+       <y>265</y>
        <width>310</width>
        <height>20</height>
       </rect>
@@ -883,7 +889,7 @@ p, li { white-space: pre-wrap; }
      <property name="geometry">
       <rect>
        <x>20</x>
-       <y>270</y>
+       <y>295</y>
        <width>481</width>
        <height>20</height>
       </rect>
@@ -896,7 +902,7 @@ p, li { white-space: pre-wrap; }
      <property name="geometry">
       <rect>
        <x>20</x>
-       <y>295</y>
+       <y>320</y>
        <width>481</width>
        <height>23</height>
       </rect>
@@ -909,7 +915,7 @@ p, li { white-space: pre-wrap; }
      <property name="geometry">
       <rect>
        <x>401</x>
-       <y>330</y>
+       <y>355</y>
        <width>100</width>
        <height>28</height>
       </rect>
