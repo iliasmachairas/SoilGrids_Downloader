@@ -23,7 +23,7 @@
 """
 from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication, Qt
 from qgis.PyQt.QtGui import QIcon, QClipboard
-from qgis.PyQt.QtWidgets import QAction, QFileDialog
+from qgis.PyQt.QtWidgets import QAction, QFileDialog, QProgressDialog, QApplication
 from qgis.core import QgsProject, Qgis, QgsVectorLayer, QgsWkbTypes, QgsMessageLog, QgsMapLayerProxyModel, QgsCoordinateReferenceSystem
 from qgis.core import QgsMapLayerType, QgsVectorFileWriter, QgsField
 from qgis.PyQt.QtCore import QVariant
@@ -37,7 +37,6 @@ from .resources import *
 # Import the code for the dialog
 from .Soil_Grids_Downloader_dialog import Soil_Grids_DownloaderDialog
 import os.path
-import time
 import requests
 
 class Soil_Grids_Downloader:
@@ -202,14 +201,15 @@ class Soil_Grids_Downloader:
         self.dlg.mLineEdit.setText(filename)
 
     def open_folder(self):
-        # Expand the APPDATA environment variable
-        appdata_path = os.path.expandvars(r'%APPDATA%\QGIS\QGIS3\profiles\default\python\plugins\soil_grids_downloader\test_point_shp')
+        test_data_path = os.path.join(self.plugin_dir, 'test_point_shp')
 
         # Open File Explorer at the specified path
-        if os.path.exists(appdata_path):
-            os.startfile(appdata_path)  # This opens the folder in File Explorer
+        if os.path.exists(test_data_path):
+            os.startfile(test_data_path)  # This opens the folder in File Explorer
         else:
-            print("The specified directory does not exist.")
+            self.iface.messageBar().pushMessage(
+                "Error", f"Test data folder not found: {test_data_path}",
+                level=Qgis.Critical, duration=5)
 
     def load_shapefile(self, filepath):
         # Load the new shapefile
@@ -470,7 +470,17 @@ class Soil_Grids_Downloader:
             output_layer.startEditing()  # Start an editing session
 
             total_features = output_layer.featureCount()
+            progress = QProgressDialog(
+                "Downloading soil properties...", "Cancel", 0, total_features, self.iface.mainWindow())
+            progress.setWindowTitle("SoilGrids Downloader")
+            progress.setWindowModality(Qt.WindowModal)
+            progress.setMinimumDuration(0)
+
             for idx, feature in enumerate(output_layer.getFeatures()):
+                if progress.wasCanceled():
+                    QgsMessageLog.logMessage("Download cancelled by user", 'MyPlugin')
+                    break
+
                 geom = feature.geometry()
                 lat, lon = geom.asPoint().y(), geom.asPoint().x()  # Get latitude and longitude
                 QgsMessageLog.logMessage(f"Latitude: {lat}, Longitude: {lon}", 'MyPlugin', Qgis.Info)
@@ -492,9 +502,10 @@ class Soil_Grids_Downloader:
 
                 output_layer.updateFeature(feature)  # Update the feature in the layer
 
-                if idx < total_features - 1:
-                    time.sleep(12)  # ISRIC SoilGrids rate limit: ~5 requests/minute
+                progress.setValue(idx + 1)
+                QApplication.processEvents()
 
+            progress.close()
             output_layer.commitChanges()  # Commit the changes to save the edits
 
             # Shapefile Loading

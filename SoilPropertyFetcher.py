@@ -1,61 +1,92 @@
-import requests
-from urllib.parse import urlencode
+import struct
 import time
+
+from osgeo import gdal, osr
+
+gdal.SetConfigOption("GDAL_HTTP_TIMEOUT", "30")
+
+# SoilGrids rasters are served in Interrupted Goode Homolosine, not WGS84.
+# This is ISRIC's documented proj4 string for that CRS.
+_IGH_PROJ4 = "+proj=igh +lat_0=0 +lon_0=0 +x_0=0 +y_0=0 +ellps=WGS84 +units=m +no_defs"
+
+# d_factor per SoilGrids property (mapped units -> target units), matching
+# the values ISRIC's REST API reports in its response metadata.
+_D_FACTORS = {
+    'nitrogen': 100,
+}
+_DEFAULT_D_FACTOR = 10
+
+_transform = None
+_dataset_cache = {}
+
+
+def _get_transform():
+    global _transform
+    if _transform is None:
+        src_srs = osr.SpatialReference()
+        src_srs.ImportFromEPSG(4326)
+        dst_srs = osr.SpatialReference()
+        dst_srs.ImportFromProj4(_IGH_PROJ4)
+        _transform = osr.CoordinateTransformation(src_srs, dst_srs)
+    return _transform
+
+
+def _get_dataset(property_name, depth, value):
+    key = (property_name, depth, value)
+    ds = _dataset_cache.get(key)
+    if ds is None:
+        url = (
+            f"/vsicurl/https://files.isric.org/soilgrids/latest/data/"
+            f"{property_name}/{property_name}_{depth}_{value}.vrt"
+        )
+        ds = gdal.Open(url)
+        if ds is None:
+            raise Exception(f"Could not open SoilGrids raster for '{property_name}'")
+        _dataset_cache[key] = ds
+    return ds
+
 
 class SoilPropertyFetcher:
     def __init__(self, lat, lon):
         self.lat = lat
         self.lon = lon
-        self.base_url = "https://rest.isric.org/soilgrids/v2.0/properties/query"
 
-    def construct_url(self, properties, depth="5-15cm", value="mean"):
-        query_params = {
-            "lat": self.lat,
-            "lon": self.lon,
-            "depth": depth,
-            "value": value
-        }
-        properties_params = [('property', prop) for prop in properties]
-        query_string = urlencode(query_params) + '&' + urlencode(properties_params, doseq=True)
-        return f"{self.base_url}?{query_string}"
-
-    def fetch_properties(self, properties, retries=3, backoff_factor=2):
+    def fetch_properties(self, properties, depth="5-15cm", value="mean", retries=3, backoff_factor=2):
+        """Sample SoilGrids properties at (self.lat, self.lon) directly from
+        ISRIC's cloud-optimized rasters via GDAL's /vsicurl/, instead of the
+        rate-limited REST API. Only the pixel(s) touched are downloaded.
+        """
         results = {}
-        full_url = self.construct_url(properties)
+        transform = _get_transform()
+        x, y, _ = transform.TransformPoint(self.lat, self.lon)
 
-        for i in range(retries):
-            response = requests.get(full_url, headers={'accept': 'application/json'}, timeout=30)
-            if response.status_code == 200:
-                data = response.json()
+        for property_name in properties:
+            for attempt in range(retries):
+                try:
+                    ds = _get_dataset(property_name, depth, value)
+                    gt = ds.GetGeoTransform()
+                    px = int((x - gt[0]) / gt[1])
+                    py = int((y - gt[3]) / gt[5])
 
-                # Create a dictionary to map layer names to their corresponding data
-                layers_map = {
-                    layer['name']: layer['depths'][0]['values'].get('mean', None)
-                    for layer in data['properties']['layers']
-                }
-
-                for property_name in properties:
-                    mean_value = layers_map.get(property_name)
-                    if mean_value is not None:
-                        # the d-factor is decoded - it is included on api data
-                        if property_name == 'nitrogen':
-                            results[property_name] = mean_value / 100  # Convert if needed # check for it
-                        else:
-                            results[property_name] = mean_value / 10
-
-                    else:
+                    if px < 0 or py < 0 or px >= ds.RasterXSize or py >= ds.RasterYSize:
                         results[property_name] = None
+                        break
 
-                break
+                    band = ds.GetRasterBand(1)
+                    nodata = band.GetNoDataValue()
+                    raw = band.ReadRaster(px, py, 1, 1, buf_type=gdal.GDT_Int16)
+                    (raw_value,) = struct.unpack("h", raw)
 
-            elif response.status_code == 429:
-                wait_time = (backoff_factor ** i) * 14
-                print(f"Rate limit exceeded. Retrying in {wait_time} seconds...")
-                time.sleep(wait_time)
-            else:
-                raise Exception(f"Error fetching data: {response.status_code} - {response.text}")
+                    if nodata is not None and raw_value == nodata:
+                        results[property_name] = None
+                    else:
+                        d_factor = _D_FACTORS.get(property_name, _DEFAULT_D_FACTOR)
+                        results[property_name] = raw_value / d_factor
+                    break
 
-        else:
-            raise Exception(f"Failed to fetch data after {retries} retries due to rate limiting.")
+                except Exception as e:
+                    if attempt == retries - 1:
+                        raise Exception(f"Error fetching '{property_name}': {e}")
+                    time.sleep(backoff_factor ** attempt)
 
         return results
