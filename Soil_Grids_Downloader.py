@@ -407,7 +407,7 @@ class Soil_Grids_Downloader:
                                                    and lyr.geometryType() == QgsWkbTypes.GeometryType.PointGeometry
                                                    and lyr.crs().authid() == 'EPSG:4326'
         ]
-        self.except_list = [l for l in self.map_layers if l.id() not in self.allow_list]
+        self.except_list = [lyr for lyr in self.map_layers if lyr.id() not in self.allow_list]
         self.dlg.mMapLayerComboBox.setExceptedLayerList(self.except_list)
 
         # Expand the APPDATA environment variable
