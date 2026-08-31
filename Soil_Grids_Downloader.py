@@ -33,8 +33,9 @@ import webbrowser
 from .SoilPropertyFetcher import SoilPropertyFetcher, download_property_raster
 from .extent_tool import ExtentDrawingTool
 
-# Initialize Qt resources from file resources.py
-from .resources import *
+# Initialize Qt resources from file resources.py (registers icons on import;
+# no names are used from it directly, so a plain import avoids a wildcard).
+from . import resources
 # Import the code for the dialog
 from .Soil_Grids_Downloader_dialog import Soil_Grids_DownloaderDialog
 import os.path
@@ -206,11 +207,13 @@ class Soil_Grids_Downloader:
 
         # Open File Explorer at the specified path
         if os.path.exists(test_data_path):
-            os.startfile(test_data_path)  # This opens the folder in File Explorer
+            # test_data_path is derived from self.plugin_dir, not user input,
+            # and os.startfile never invokes a shell - no injection surface.
+            os.startfile(test_data_path)  # nosec B606
         else:
             self.iface.messageBar().pushMessage(
                 "Error", f"Test data folder not found: {test_data_path}",
-                level=Qgis.Critical, duration=5)
+                level=Qgis.MessageLevel.Critical, duration=5)
 
     def load_shapefile(self, filepath):
         # Load the new shapefile
@@ -239,7 +242,7 @@ class Soil_Grids_Downloader:
     # Click on the map
     def setup_point_tool(self):
         # Minimize the dialog window
-        self.dlg.setWindowState(Qt.WindowMinimized)
+        self.dlg.setWindowState(Qt.WindowState.WindowMinimized)
         canvas = self.iface.mapCanvas()
         self.pointTool = QgsMapToolEmitPoint(canvas)
         self.pointTool.canvasClicked.connect(self.handle_canvas_click)
@@ -251,7 +254,7 @@ class Soil_Grids_Downloader:
         target_crs = QgsCoordinateReferenceSystem("EPSG:4326")  # Example target CRS (WGS 84)
 
         if current_crs != target_crs:
-            self.iface.messageBar().pushMessage("Error", "CRS mismatch! Coordinates not updated.", level=Qgis.Critical)
+            self.iface.messageBar().pushMessage("Error", "CRS mismatch! Coordinates not updated.", level=Qgis.MessageLevel.Critical)
             QgsMessageLog.logMessage('My message', 'CRS was checked')
         else:
             # Extract coordinates
@@ -275,7 +278,7 @@ class Soil_Grids_Downloader:
                     self.iface.messageBar().pushMessage(
                         "Warning",
                         "You either selected an urban area or sea - be careful.",
-                        level=Qgis.Warning
+                        level=Qgis.MessageLevel.Warning
                     )
                     QgsMessageLog.logMessage("None values detected in soil properties.", 'MyPlugin')
 
@@ -291,7 +294,7 @@ class Soil_Grids_Downloader:
 
 
         # Restore the dialog window
-        self.dlg.setWindowState(Qt.WindowNoState)
+        self.dlg.setWindowState(Qt.WindowState.WindowNoState)
         self.dlg.raise_()  # Bring to the foreground
         self.dlg.activateWindow()  # Make it the active window
 
@@ -326,7 +329,7 @@ class Soil_Grids_Downloader:
         self.iface.messageBar().pushMessage(
             "Data Copied",
             "All parameters copied to clipboard.",
-            level=Qgis.Info,
+            level=Qgis.MessageLevel.Info,
             duration=3
         )
 
@@ -362,11 +365,11 @@ class Soil_Grids_Downloader:
 
         # Create the dialog with elements (after translation) and keep reference
         # Only create GUI ONCE in callback, so that it will only load when the plugin is started
-        if self.first_start == True:
+        if self.first_start:
             self.first_start = False
             # self.dlg = Soil_Grids_DownloaderDialog()
             self.dlg.toolButton.clicked.connect(self.select_output_file)
-            self.dlg.buttonBox.button(QDialogButtonBox.Ok).setText("Run")
+            self.dlg.buttonBox.button(QDialogButtonBox.StandardButton.Ok).setText("Run")
             self.dlg.buttonBox.accepted.connect(self.run_point_shapefile_download)
 
             # Download raster tab
@@ -391,7 +394,7 @@ class Soil_Grids_Downloader:
         #     layer = layer_tree_layer.layer()
         #     print(layer)
         #     if isinstance(layer, QgsVectorLayer):  # Check if it's a vector layer
-        #         if layer.geometryType() == QgsWkbTypes.PointGeometry:  # Check if it's a point vector
+        #         if layer.geometryType() == QgsWkbTypes.GeometryType.PointGeometry:  # Check if it's a point vector
         #             # Check if the layer's CRS is EPSG:4326
         #             if layer.crs().authid() == 'EPSG:4326':
         #                 self.point_layers_epsg_4326.append(layer)
@@ -401,7 +404,7 @@ class Soil_Grids_Downloader:
         self.map_layers = QgsProject.instance().mapLayers().values()
         self.allow_list = [
             lyr.id() for lyr in self.map_layers if lyr.type() == QgsMapLayerType.VectorLayer
-                                                   and lyr.geometryType() == QgsWkbTypes.PointGeometry
+                                                   and lyr.geometryType() == QgsWkbTypes.GeometryType.PointGeometry
                                                    and lyr.crs().authid() == 'EPSG:4326'
         ]
         self.except_list = [l for l in self.map_layers if l.id() not in self.allow_list]
@@ -436,7 +439,7 @@ class Soil_Grids_Downloader:
         # run_point_shapefile_download (connected to buttonBox.accepted)
         # while the dialog is still open, so the embedded progress bar is
         # visible; that method calls self.dlg.accept() itself when done.
-        self.dlg.exec_()
+        self.dlg.exec()
 
     def run_point_shapefile_download(self):
         # Guard against re-entrancy: the download loop below calls
@@ -446,7 +449,7 @@ class Soil_Grids_Downloader:
         if getattr(self, '_download_running', False):
             return
         self._download_running = True
-        run_button = self.dlg.buttonBox.button(QDialogButtonBox.Ok)
+        run_button = self.dlg.buttonBox.button(QDialogButtonBox.StandardButton.Ok)
         run_button.setEnabled(False)
         try:
             self._download_point_shapefile()
@@ -461,14 +464,14 @@ class Soil_Grids_Downloader:
         if not output_filename:
             self.iface.messageBar().pushMessage(
                 "Error", "Please select a valid output filename.",
-                level=Qgis.Critical, duration=5)
+                level=Qgis.MessageLevel.Critical, duration=5)
             return  # Exit if no filename is provided
 
         selectedlayer = self.dlg.mMapLayerComboBox.currentLayer()
         if selectedlayer is None:
             self.iface.messageBar().pushMessage(
                 "Error", "Please select a point layer.",
-                level=Qgis.Critical, duration=5)
+                level=Qgis.MessageLevel.Critical, duration=5)
             return
         selectedlayername = selectedlayer.name()
         input_filepath = selectedlayer.dataProvider().dataSourceUri()
@@ -479,7 +482,7 @@ class Soil_Grids_Downloader:
 
         # todo fix this warning
         # Step 1: Write the input shapefile to a new output shapefil5e first (without modifications)
-        writer = QgsVectorFileWriter(output_filename, "UTF-8", selectedlayer.fields(), QgsWkbTypes.Point,
+        writer = QgsVectorFileWriter(output_filename, "UTF-8", selectedlayer.fields(), QgsWkbTypes.Type.Point,
                                      selectedlayer.crs(), "ESRI Shapefile")
 
 
@@ -501,7 +504,7 @@ class Soil_Grids_Downloader:
         if not properties:
             self.iface.messageBar().pushMessage(
                 "Error", "Please select at least one property.",
-                level=Qgis.Critical, duration=5)
+                level=Qgis.MessageLevel.Critical, duration=5)
             return  # Exit if no properties are selected
 
         # new_column_name = "Clay"
@@ -519,7 +522,7 @@ class Soil_Grids_Downloader:
         for idx, feature in enumerate(output_layer.getFeatures()):
             geom = feature.geometry()
             lat, lon = geom.asPoint().y(), geom.asPoint().x()  # Get latitude and longitude
-            QgsMessageLog.logMessage(f"Latitude: {lat}, Longitude: {lon}", 'MyPlugin', Qgis.Info)
+            QgsMessageLog.logMessage(f"Latitude: {lat}, Longitude: {lon}", 'MyPlugin', Qgis.MessageLevel.Info)
             # QgsMessageLog.logMessage(str(lat), str(lon), 'MyPlugin')
 
             # Fetch soil property
@@ -555,14 +558,14 @@ class Soil_Grids_Downloader:
 
     def start_draw_raster_extent(self):
         """Minimise the dialog and activate the rubber-band extent tool."""
-        self.dlg.setWindowState(Qt.WindowMinimized)
+        self.dlg.setWindowState(Qt.WindowState.WindowMinimized)
         tool = ExtentDrawingTool(self.iface.mapCanvas(), self.handle_raster_extent)
         self.iface.mapCanvas().setMapTool(tool)
 
     def handle_raster_extent(self, xmin, ymin, xmax, ymax):
         """Callback from ExtentDrawingTool - fills the AOI coordinate fields."""
         self.dlg.set_raster_aoi(xmin, ymin, xmax, ymax)
-        self.dlg.setWindowState(Qt.WindowNoState)
+        self.dlg.setWindowState(Qt.WindowState.WindowNoState)
         self.dlg.raise_()
         self.dlg.activateWindow()
         self.iface.mapCanvas().setMapTool(QgsMapToolPan(self.iface.mapCanvas()))
@@ -635,14 +638,14 @@ class Soil_Grids_Downloader:
                 bbox = self.dlg.get_raster_aoi()
             except ValueError as e:
                 self.iface.messageBar().pushMessage(
-                    "Error", str(e), level=Qgis.Critical, duration=5)
+                    "Error", str(e), level=Qgis.MessageLevel.Critical, duration=5)
                 return
         else:
             layer = self.dlg.get_raster_aoi_layer()
             if layer is None:
                 self.iface.messageBar().pushMessage(
                     "Error", "Please select a polygon layer.",
-                    level=Qgis.Critical, duration=5)
+                    level=Qgis.MessageLevel.Critical, duration=5)
                 return
             extent = layer.extent()
             wgs84 = QgsCoordinateReferenceSystem("EPSG:4326")
@@ -654,31 +657,31 @@ class Soil_Grids_Downloader:
         level, message = self._aoi_size_status(*bbox)
         if level == "error":
             self.iface.messageBar().pushMessage(
-                "Error", message, level=Qgis.Critical, duration=5)
+                "Error", message, level=Qgis.MessageLevel.Critical, duration=5)
             self.dlg.label_raster_status.setText(message)
             return
         if level == "warning":
             self.iface.messageBar().pushMessage(
-                "Warning", message, level=Qgis.Warning, duration=5)
+                "Warning", message, level=Qgis.MessageLevel.Warning, duration=5)
 
         properties = self.dlg.get_selected_raster_properties()
         if not properties:
             self.iface.messageBar().pushMessage(
                 "Error", "Please select at least one property.",
-                level=Qgis.Critical, duration=5)
+                level=Qgis.MessageLevel.Critical, duration=5)
             return
 
         output_base = self.dlg.lineEdit_raster_output.text().strip()
         if not output_base:
             self.iface.messageBar().pushMessage(
                 "Error", "Please choose where to save the file.",
-                level=Qgis.Critical, duration=5)
+                level=Qgis.MessageLevel.Critical, duration=5)
             return
         output_dir = os.path.dirname(output_base)
         if output_dir and not os.path.isdir(output_dir):
             self.iface.messageBar().pushMessage(
                 "Error", f"Output folder does not exist: {output_dir}",
-                level=Qgis.Critical, duration=5)
+                level=Qgis.MessageLevel.Critical, duration=5)
             return
 
         base, ext = os.path.splitext(output_base)
@@ -706,7 +709,7 @@ class Soil_Grids_Downloader:
                 QgsMessageLog.logMessage(f"Failed to download raster for {property_name}: {e}", 'MyPlugin')
                 self.iface.messageBar().pushMessage(
                     "Error", f"Failed to download '{property_name}': {e}",
-                    level=Qgis.Critical, duration=5)
+                    level=Qgis.MessageLevel.Critical, duration=5)
 
             self.dlg.progressBar_tab5.setValue(idx + 1)
             QApplication.processEvents()

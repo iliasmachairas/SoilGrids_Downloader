@@ -54,7 +54,7 @@ class Soil_Grids_DownloaderDialog(QtWidgets.QDialog, FORM_CLASS):
         # #widgets-and-dialogs-with-auto-connect
         self.setupUi(self)
 
-        self.comboBox_raster_aoi_layer.setFilters(QgsMapLayerProxyModel.PolygonLayer)
+        self.comboBox_raster_aoi_layer.setFilters(QgsMapLayerProxyModel.Filter.PolygonLayer)
 
         self.rasterAoiGroup = QButtonGroup(self)
         self.rasterAoiGroup.addButton(self.radioBtn_raster_aoi_draw, 0)
