@@ -30,7 +30,8 @@ from qgis.PyQt.QtCore import QVariant
 from qgis.gui import QgsMapToolEmitPoint, QgsMapToolPan
 from urllib.parse import urlencode
 import webbrowser
-from .SoilPropertyFetcher import SoilPropertyFetcher
+from .SoilPropertyFetcher import SoilPropertyFetcher, download_property_raster
+from .extent_tool import ExtentDrawingTool
 
 # Initialize Qt resources from file resources.py
 from .resources import *
@@ -359,6 +360,11 @@ class Soil_Grids_Downloader:
             self.dlg.buttonBox.button(QDialogButtonBox.Ok).setText("Run")
             self.dlg.buttonBox.accepted.connect(self.run_point_shapefile_download)
 
+            # Download raster tab
+            self.dlg.pushButton_draw_extent.clicked.connect(self.start_draw_raster_extent)
+            self.dlg.toolButton_raster_output.clicked.connect(self.select_raster_output_folder)
+            self.dlg.pushButton_run_raster.clicked.connect(self.run_raster_download)
+
         # Fetch the currently loaded layers
         # layers = QgsProject.instance().layerTreeRoot().children()
         # Clear the contents of the comboBox from previous runs
@@ -534,3 +540,91 @@ class Soil_Grids_Downloader:
         print(f"New shapefile updated with soil properties: {output_layer}")
         self.dlg.progressBar_tab2.setValue(0)
         self.dlg.accept()
+
+    # ── Download raster tab ──────────────────────────────────────────────
+
+    def start_draw_raster_extent(self):
+        """Minimise the dialog and activate the rubber-band extent tool."""
+        self.dlg.setWindowState(Qt.WindowMinimized)
+        tool = ExtentDrawingTool(self.iface.mapCanvas(), self.handle_raster_extent)
+        self.iface.mapCanvas().setMapTool(tool)
+
+    def handle_raster_extent(self, xmin, ymin, xmax, ymax):
+        """Callback from ExtentDrawingTool - fills the AOI coordinate fields."""
+        self.dlg.set_raster_aoi(xmin, ymin, xmax, ymax)
+        self.dlg.setWindowState(Qt.WindowNoState)
+        self.dlg.raise_()
+        self.dlg.activateWindow()
+        self.iface.mapCanvas().setMapTool(QgsMapToolPan(self.iface.mapCanvas()))
+
+    def select_raster_output_folder(self):
+        folder = QFileDialog.getExistingDirectory(
+            self.dlg, "Select output folder",
+            self.dlg.lineEdit_raster_output.text() or os.path.expanduser("~"))
+        if folder:
+            self.dlg.lineEdit_raster_output.setText(folder)
+
+    def run_raster_download(self):
+        # Same re-entrancy guard as run_point_shapefile_download: the loop
+        # below calls QApplication.processEvents(), so a fast second click
+        # could otherwise start a second download while the first is still
+        # writing files.
+        if getattr(self, '_raster_download_running', False):
+            return
+        self._raster_download_running = True
+        self.dlg.pushButton_run_raster.setEnabled(False)
+        try:
+            self._download_raster()
+        finally:
+            self.dlg.pushButton_run_raster.setEnabled(True)
+            self._raster_download_running = False
+
+    def _download_raster(self):
+        try:
+            bbox = self.dlg.get_raster_aoi()
+        except ValueError as e:
+            self.iface.messageBar().pushMessage(
+                "Error", str(e), level=Qgis.Critical, duration=5)
+            return
+
+        properties = self.dlg.get_selected_raster_properties()
+        if not properties:
+            self.iface.messageBar().pushMessage(
+                "Error", "Please select at least one property.",
+                level=Qgis.Critical, duration=5)
+            return
+
+        output_dir = self.dlg.lineEdit_raster_output.text().strip()
+        if not output_dir:
+            self.iface.messageBar().pushMessage(
+                "Error", "Please select an output folder.",
+                level=Qgis.Critical, duration=5)
+            return
+        if not os.path.isdir(output_dir):
+            self.iface.messageBar().pushMessage(
+                "Error", f"Output folder does not exist: {output_dir}",
+                level=Qgis.Critical, duration=5)
+            return
+
+        self.dlg.progressBar_tab5.setMaximum(len(properties))
+        self.dlg.progressBar_tab5.setValue(0)
+
+        saved = 0
+        for idx, property_name in enumerate(properties):
+            self.dlg.label_raster_status.setText(f"Downloading {property_name}...")
+            QApplication.processEvents()
+
+            output_path = os.path.join(output_dir, f"{property_name}_5-15cm_mean.tif")
+            try:
+                download_property_raster(property_name, bbox, output_path)
+                saved += 1
+            except Exception as e:
+                QgsMessageLog.logMessage(f"Failed to download raster for {property_name}: {e}", 'MyPlugin')
+                self.iface.messageBar().pushMessage(
+                    "Error", f"Failed to download '{property_name}': {e}",
+                    level=Qgis.Critical, duration=5)
+
+            self.dlg.progressBar_tab5.setValue(idx + 1)
+            QApplication.processEvents()
+
+        self.dlg.label_raster_status.setText(f"Done - saved {saved} of {len(properties)} raster(s) to {output_dir}")

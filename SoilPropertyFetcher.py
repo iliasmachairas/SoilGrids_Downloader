@@ -1,4 +1,6 @@
+import os
 import struct
+import tempfile
 import time
 
 from osgeo import gdal, osr
@@ -31,19 +33,55 @@ def _get_transform():
     return _transform
 
 
+def _raster_url(property_name, depth, value):
+    return (
+        f"/vsicurl/https://files.isric.org/soilgrids/latest/data/"
+        f"{property_name}/{property_name}_{depth}_{value}.vrt"
+    )
+
+
 def _get_dataset(property_name, depth, value):
     key = (property_name, depth, value)
     ds = _dataset_cache.get(key)
     if ds is None:
-        url = (
-            f"/vsicurl/https://files.isric.org/soilgrids/latest/data/"
-            f"{property_name}/{property_name}_{depth}_{value}.vrt"
-        )
-        ds = gdal.Open(url)
+        ds = gdal.Open(_raster_url(property_name, depth, value))
         if ds is None:
             raise Exception(f"Could not open SoilGrids raster for '{property_name}'")
         _dataset_cache[key] = ds
     return ds
+
+
+def download_property_raster(property_name, bbox, output_path, depth="5-15cm", value="mean"):
+    """Clip a SoilGrids property to `bbox` (xmin, ymin, xmax, ymax in EPSG:4326)
+    and save it as a standard EPSG:4326 GeoTIFF at `output_path`.
+
+    Clipping happens in two steps: first a windowed read straight out of the
+    remote Homolosine COG (cheap - only the bytes covering the bbox travel
+    over the network), then a local reprojection to EPSG:4326 so the result
+    opens with the CRS most tools expect.
+    """
+    xmin, ymin, xmax, ymax = bbox
+    url = _raster_url(property_name, depth, value)
+
+    clip_fd, clip_path = tempfile.mkstemp(suffix=".tif")
+    os.close(clip_fd)
+    try:
+        clipped = gdal.Translate(
+            clip_path, url,
+            projWin=[xmin, ymax, xmax, ymin],
+            projWinSRS="EPSG:4326",
+        )
+        if clipped is None:
+            raise Exception(f"Failed to clip raster for '{property_name}'")
+        clipped = None  # flush to disk
+
+        warped = gdal.Warp(output_path, clip_path, dstSRS="EPSG:4326")
+        if warped is None:
+            raise Exception(f"Failed to reproject raster for '{property_name}'")
+        warped = None
+    finally:
+        if os.path.exists(clip_path):
+            os.remove(clip_path)
 
 
 class SoilPropertyFetcher:

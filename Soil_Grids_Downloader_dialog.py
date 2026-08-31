@@ -61,3 +61,39 @@ class Soil_Grids_DownloaderDialog(QtWidgets.QDialog, FORM_CLASS):
             selected_properties.append('soc')
 
         return selected_properties
+
+    def get_selected_raster_properties(self):
+        """Return a list of selected properties on the 'Download raster' tab."""
+        selected_properties = []
+
+        if self.checkBox_tab5_sand.isChecked():
+            selected_properties.append('sand')
+        if self.checkBox_tab5_clay.isChecked():
+            selected_properties.append('clay')
+        if self.checkBox_tab5_silt.isChecked():
+            selected_properties.append('silt')
+        if self.checkBox_tab5_nitrogen.isChecked():
+            selected_properties.append('nitrogen')
+        if self.checkBox_tab5_soc.isChecked():
+            selected_properties.append('soc')
+
+        return selected_properties
+
+    def get_raster_aoi(self):
+        """Return (xmin, ymin, xmax, ymax) as floats, raise ValueError if invalid."""
+        try:
+            top    = float(self.lineEdit_raster_top.text())
+            bottom = float(self.lineEdit_raster_bottom.text())
+            left   = float(self.lineEdit_raster_left.text())
+            right  = float(self.lineEdit_raster_right.text())
+        except ValueError:
+            raise ValueError("Area of interest coordinates must be valid decimal numbers.")
+        if left >= right or bottom >= top:
+            raise ValueError("Invalid area of interest: left < right and bottom < top required.")
+        return left, bottom, right, top  # xmin, ymin, xmax, ymax
+
+    def set_raster_aoi(self, xmin, ymin, xmax, ymax):
+        self.lineEdit_raster_left.setText(f"{xmin:.6f}")
+        self.lineEdit_raster_right.setText(f"{xmax:.6f}")
+        self.lineEdit_raster_bottom.setText(f"{ymin:.6f}")
+        self.lineEdit_raster_top.setText(f"{ymax:.6f}")
